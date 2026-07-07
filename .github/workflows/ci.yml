@@ -1,25 +1,36 @@
-name: Premier Workflow
+name: Laravel CI
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  bonjour:
+  tests-applicatifs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Récupération du code source
+      - name: Récupérer le code du dépôt
         uses: actions/checkout@v4
 
-      - name: Configuration de l'environnement PHP
+      - name: Initialiser PHP 8.4
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, sqlite3
+          tools: composer
 
-      - name: Vérification de la version de PHP
-        run: php -v
+      - name: Installer les dépendances du projet (Composer)
+        run: composer install --no-ansi --no-interaction --no-scripts --prefer-dist
 
-      - name: Message de bienvenue
-        run: echo "Bonjour GitHub Actions, le runner est opérationnel !"
+      - name: Préparer l'environnement de configuration
+        run: cp .env.example .env
+
+      - name: Générer la clé applicative unique
+        run: php artisan key:generate
+
+      - name: Exécuter la suite de tests unitaires et d'intégration
+        run: php artisan test
